@@ -170,3 +170,7 @@ This document outlines the key architectural concepts, implementation details, a
 *   **Physics Integration:** `@react-three/rapier` simplifies adding physics to your scene, allowing for realistic interactions.
 *   **Shader Customization:** Easy integration of GLSL shaders for custom visual effects.
 *   **Offloaded Tasks:** Web workers ensure that heavy tasks like asset loading and data generation don't impact the main thread's performance, leading to a smoother user experience.
+
+## 11. Operational Guidelines (Gemini)
+
+*   **Commit Policy:** Gemini will always ask for explicit permission to commit changes. This request will only be made when all requirements for a given task (feature) are met, and will include a clear assessment of feature completeness, potentially referencing the project's `README.md` checklist and emoji system.

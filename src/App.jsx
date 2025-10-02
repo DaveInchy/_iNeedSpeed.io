@@ -1,10 +1,13 @@
-import * as THREE from "three";
-import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect } from "react";
-import { CameraNode } from "./components/CameraNode";
-import { MeshNode } from "./components/MeshNode";
-import { PlaneNode } from "./components/PlaneNode";
-import { useSceneGraphStore } from "./stores/useSceneGraphStore";
+import { Canvas } from '@react-three/fiber'
+import { Suspense, useEffect } from 'react'
+import { useSceneGraphStore } from './stores/useSceneGraphStore'
+import { MeshNode } from './components/MeshNode'
+import { CameraNode } from './components/CameraNode'
+import { PlaneNode } from './components/PlaneNode'
+import { Physics, RigidBody } from '@react-three/rapier'
+import { KeyboardControls } from '@react-three/drei'
+import { VehicleController } from './components/VehicleController'
+import * as THREE from 'three'
 
 function App() {
   const { nodes, setNodes } = useSceneGraphStore()
@@ -22,8 +25,8 @@ function App() {
             '/cache/gltf/vehicle/rx7/MAIN.glb',
             '/cache/gltf/vehicle/rx7/WHEELS.glb',
           ],
-          position: [0, 0, 0],
-          scale: 1, // Scaled back to 1
+          position: [0, 0.5, 0], // Lift car slightly above ground
+          scale: 1,
         },
       },
       {
@@ -50,22 +53,42 @@ function App() {
   }, [setNodes])
 
   return (
-    <Canvas camera={{ position: [0, 5, 10], fov: 75 }}>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 10, 5]} intensity={1} color={0xffffff} />
-      <Suspense fallback={null}>
-        {nodes.map((node) => {
-          if (node.type === 'MeshNode') {
-            return <MeshNode key={node.id} node={node} />
-          } else if (node.type === 'CameraNode') {
-            return <CameraNode key={node.id} node={node} />
-          } else if (node.type === 'PlaneNode') {
-            return <PlaneNode key={node.id} node={node} />
-          }
-          return null
-        })}
-      </Suspense>
-    </Canvas>
+    <KeyboardControls
+      map={[
+        { name: "forward", keys: ["ArrowUp", "w", "W"] },
+        { name: "backward", keys: ["ArrowDown", "s", "S"] },
+        { name: "left", keys: ["ArrowLeft", "a", "A"] },
+        { name: "right", keys: ["ArrowRight", "d", "D"] },
+      ]}>
+      <Canvas camera={{ position: [0, 5, 10], fov: 75 }}>
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[5, 10, 5]} intensity={1} color={0xffffff} />
+        <Physics>
+          {nodes.map((node) => {
+            if (node.type === 'MeshNode') {
+              return (
+                <VehicleController key={node.id}>
+                  <RigidBody colliders="cuboid" position={node.parameters.position} scale={node.parameters.scale}>
+                    <Suspense fallback={null}>
+                      <MeshNode node={node} />
+                    </Suspense>
+                  </RigidBody>
+                </VehicleController>
+              )
+            } else if (node.type === 'CameraNode') {
+              return <CameraNode key={node.id} node={node} />
+            } else if (node.type === 'PlaneNode') {
+              return (
+                <RigidBody key={node.id} type="fixed" colliders="cuboid" position={node.parameters.position}>
+                  <PlaneNode node={node} />
+                </RigidBody>
+              )
+            }
+            return null
+          })}
+        </Physics>
+      </Canvas>
+    </KeyboardControls>
   )
 }
 
